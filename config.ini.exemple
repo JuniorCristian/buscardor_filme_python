@@ -1,0 +1,8 @@
+[DEFAULT]
+token=<coloque seu token aqui>
+support_chat_id=<insira seu id de usuário ou de grupo aqui>
+
+[DB]
+host=localhost
+port=6379
+db=0
