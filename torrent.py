@@ -4,7 +4,7 @@ import datetime
 import telegrambot
 
 
-def download(url, type, mensagem):
+def download(url, type, update, bot):
     ses = lt.session()
     ses.listen_on(6881, 6891)
 
@@ -37,7 +37,7 @@ def download(url, type, mensagem):
         texto = ('Seu Download está %.2f %% completo (down: %.1f Kb/s up: %.1f Kb/s pares: %d)' % (
         s.progress * 100, s.download_rate / 1000, s.upload_rate / 1000, s.num_peers))
 
-        telegrambot.atualizacaoStatus(mensagem, texto)
+        telegrambot.atualizacaoStatus(bot, update, texto)
 
         time.sleep(50)
     ses.stop_dht()
@@ -45,4 +45,4 @@ def download(url, type, mensagem):
     print(handle.name(), "COMPLETED")
     print("Elapsed Time", int((end - begin) // 60), "min: ", int((end - begin) % 60), "sec: ")
     print(datetime.datetime.now())
-    telegrambot.atualizacaoStatus(mensagem, ("Tempo de download: "+str(int((end - begin) // 60))+ "min"+str(int((end - begin) % 60))+"sec"))
+    telegrambot.atualizacaoStatus(bot, update, ("Tempo de download: "+str(int((end - begin) // 60))+ "min"+str(int((end - begin) % 60))+"sec"))

@@ -16,7 +16,7 @@ def getitens(search):
     return text
 
 
-def getlink(url, mensagem):
+def getlink(url, update, bot):
     page = requests.get(url)
     soup = BeautifulSoup(page.text, 'html.parser')
     links = soup.find_all("a")
@@ -25,5 +25,5 @@ def getlink(url, mensagem):
     for link in links:
         if(str(link.get('href')).find('magnet') >= 0):
             text += link.get('href') + "\n"
-            torrent.download(link.get('href'), "Animes", mensagem)
+            torrent.download(link.get('href'), "Animes", update, bot)
     return text
