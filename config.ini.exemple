@@ -1,6 +1,7 @@
 [DEFAULT]
 token=<coloque seu token aqui>
 support_chat_id=<insira seu id de usuário ou de grupo aqui>
+url_busca=<coloque o link do site>
 
 [DB]
 host=localhost

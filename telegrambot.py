@@ -4,7 +4,7 @@ import torrent
 import buscaTorrent
 import redis
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from pprint import pprint
+# from pprint import pprint
 
 config = configparser.ConfigParser()
 config.read_file(open('config.ini'))
@@ -29,13 +29,34 @@ def atualizacaoStatus(bot, update, texto):
     bot.send_message(update.message.chat_id, texto)
 
 
+def mandafoto(bot, update):
+    buscaTorrent.geturl(update, bot)
+
+
+baixar_magnet_handler = CommandHandler('manda_foto', mandafoto)
+dispatcher.add_handler(baixar_magnet_handler)
+
+
+def download(bot, update):
+
+    if update.message.text.replace("/baixar", "") != "":
+        torrent.download(update.message.text.replace("/baixar ", ""), "Filme", update.message, bot)
+    else:
+        chat_commands[update.message.chat_id] = 'baixar'
+        bot.reply_to(update.message, "Por favor coloque o link magnético que deseja baixar")
+
+
+baixar_magnet_handler = CommandHandler('baixar', download)
+dispatcher.add_handler(baixar_magnet_handler)
+
+
 def downloadmagnet(bot, update):
-    if (update.message.text != ""):
+    if update.message.text.replace("/baixar_magnet", "") != "":
         bot.reply_to(update.message, "Okay, vou começar a baixar")
-        torrent.download(update.message.text.replace("/baixar_magnet ", ""), "Filme", update.message)
+        torrent.download(update.message.text.replace("/baixar_magnet ", ""), "Filme", update.message, bot)
     else:
         chat_commands[update.message.chat_id] = 'baixar_magnet'
-        bot.reply_to(update.message, "Por favor coloque o link que deseja baixar")
+        bot.reply_to(update.message, "Por favor coloque o link magnético que deseja baixar")
 
 
 baixar_magnet_handler = CommandHandler('baixar_magnet', downloadmagnet)
@@ -47,7 +68,6 @@ def downloadlink(bot, update):
         buscaTorrent.getlink(update.message.text.replace("/baixar_link ", ""), update, bot)
     else:
         chat_commands[update.message.chat_id] = 'baixar_link'
-        print("O comando do chat é: ", chat_commands)
         bot.send_message(chat_id=update.message.chat_id, text="Por favor coloque o link que deseja baixar",
                          reply_to_message_id=update.message.message_id)
 
@@ -57,13 +77,24 @@ dispatcher.add_handler(baixar_link_handler)
 
 
 def search(bot, update):
-    text = buscaTorrent.getitens(update.message.text.replace("/buscar ", ""))
-    if (text == ""):
-        text = "Nenhum resultado encontrado para essa busca"
+    if update.message.text.replace("/buscar", "") != "":
+        buttons = buscaTorrent.getitens(update.message.text.replace("/buscar ", ""), bot, update)
+        if not buttons:
+            text = "Nenhum resultado encontrado para essa busca"
+        else:
+            text = "Selecione uma das opções para baixar"
 
-    bot.send_message(chat_id=update.message.chat_id,
-                     text=text,
-                     reply_to_message_id=update.message.message_id)
+        reply_kb_markup = telegram.ReplyKeyboardMarkup(buttons,
+                                                       resize_keyboard=True,
+                                                       one_time_keyboard=True)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text=text,
+                         reply_to_message_id=update.message.message_id,
+                         reply_markup=reply_kb_markup)
+    else:
+        chat_commands[update.message.chat_id] = 'buscar'
+        bot.send_message(chat_id=update.message.chat_id, text="Por favor digite a sua busca",
+                         reply_to_message_id=update.message.message_id)
 
 
 buscar_handler = CommandHandler('buscar', search)
@@ -79,10 +110,11 @@ def responder(bot, update):
         chat_commands[update.message.chat_id] = ''
         downloadlink(bot, update)
     else:
-        if chat_commands[update.message.chat_id] == "baixar_magnet":
-            print('')
+        if chat_commands[update.message.chat_id] == "buscar":
+            chat_commands[update.message.chat_id] = ''
+            search(bot, update)
         else:
-            if chat_commands[update.message.chat_id] == "buscar":
+            if chat_commands[update.message.chat_id] == "baixar_magnet":
                 print('')
             else:
                 if chat_commands[update.message.chat_id] == "baixar":
@@ -96,7 +128,10 @@ def responder(bot, update):
                     /baixar_magnet Coloque o link exato do filme ou série para baixar diretamente(Melhor Opção)
                     """
                     main_menu_keyboard = [[telegram.KeyboardButton('/buscar')],
-                                          [telegram.KeyboardButton('/baixar_link')]]
+                                          [telegram.KeyboardButton('/baixar')],
+                                          [telegram.KeyboardButton('/baixar_link')],
+                                          [telegram.KeyboardButton('/baixar_magnet')]
+                                          ]
                     reply_kb_markup = telegram.ReplyKeyboardMarkup(main_menu_keyboard,
                                                                    resize_keyboard=True,
                                                                    one_time_keyboard=True)
